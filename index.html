@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Pouch Report</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0A0A0F;
+      color: #E8E8F0;
+      font-family: Georgia, 'Times New Roman', serif;
+      min-height: 100vh;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Header ── */
+    .header {
+      border-bottom: 1px solid #1e1e28;
+      padding: 28px 24px 20px;
+      background: #0D0D1A;
+    }
+    .header-inner { max-width: 720px; margin: 0 auto; }
+    .eyebrow {
+      font-size: 10px; letter-spacing: 0.3em; color: #555;
+      font-family: monospace; margin-bottom: 6px; text-transform: uppercase;
+    }
+    h1 {
+      font-size: clamp(28px, 6vw, 46px); font-weight: 700;
+      letter-spacing: -0.02em; color: #F0F0F8; margin-bottom: 10px;
+    }
+    .meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .meta-date { font-size: 12px; color: #555; font-family: monospace; }
+    .meta-sep { color: #2a2a3a; }
+    .brand-pill {
+      font-size: 10px; font-family: monospace;
+      letter-spacing: 0.12em; font-weight: 700;
+    }
+
+    /* ── Body ── */
+    .body { max-width: 720px; margin: 0 auto; padding: 36px 24px 80px; }
+
+    /* ── Idle ── */
+    .idle { text-align: center; padding: 60px 0; }
+    .idle-icon { font-size: 40px; margin-bottom: 20px; }
+    .idle p { color: #666; font-size: 14px; line-height: 1.7; margin-bottom: 28px; }
+
+    /* ── Buttons ── */
+    .btn {
+      cursor: pointer; font-family: monospace; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; border: none;
+      padding: 12px 30px; font-size: 13px; transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.8; }
+    .btn-primary { background: #F0F0F8; color: #0A0A0F; }
+    .btn-ghost { background: transparent; color: #777; border: 1px solid #333; padding: 7px 16px; font-size: 10px; }
+    .btn-danger { background: transparent; color: #999; border: 1px solid #555; padding: 7px 16px; font-size: 10px; }
+
+    /* ── Loading ── */
+    .loading { text-align: center; padding: 80px 0; }
+    .spinner {
+      width: 36px; height: 36px; border: 2px solid #222;
+      border-top-color: #F0F0F8; border-radius: 50%;
+      margin: 0 auto 20px; animation: spin 0.9s linear infinite;
+    }
+    .step-text { color: #666; font-family: monospace; font-size: 12px; }
+
+    /* ── Error ── */
+    .error-box {
+      padding: 20px; border: 1px solid #E63946;
+      background: rgba(230,57,70,0.08); margin-bottom: 20px;
+    }
+    .error-msg { color: #E63946; font-family: monospace; font-size: 12px; margin-bottom: 14px; word-break: break-word; }
+    .raw-label { color: #555; font-family: monospace; font-size: 10px; letter-spacing: 0.15em; margin-bottom: 6px; }
+    pre {
+      background: #111; border: 1px solid #222; padding: 14px;
+      font-size: 10px; color: #888; font-family: monospace;
+      white-space: pre-wrap; word-break: break-all;
+      max-height: 260px; overflow-y: auto;
+    }
+
+    /* ── Stats ── */
+    .stats {
+      display: flex; gap: 28px; margin-bottom: 36px;
+      padding-bottom: 24px; border-bottom: 1px solid #1a1a22;
+      flex-wrap: wrap; align-items: center;
+    }
+    .stat-label { font-size: 9px; font-family: monospace; letter-spacing: 0.2em; color: #555; margin-bottom: 3px; }
+    .stat-val { font-size: 24px; font-weight: 700; color: #F0F0F8; }
+    .stats-right { margin-left: auto; }
+
+    /* ── Brand section ── */
+    .brand {
+      margin-bottom: 30px; padding-left: 22px;
+      animation: fadeIn 0.3s ease both;
+    }
+    .brand-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .brand-name { font-size: 10px; font-family: monospace; letter-spacing: 0.2em; margin-bottom: 5px; font-weight: 700; }
+    .brand-headline { font-size: clamp(15px, 3vw, 19px); font-weight: 700; color: #F0F0F8; line-height: 1.3; }
+    .sentiment-badge {
+      flex-shrink: 0; padding: 3px 9px;
+      font-size: 9px; font-family: monospace; letter-spacing: 0.1em;
+    }
+    .bullets { margin: 0 0 8px; padding-left: 18px; }
+    .bullets li { color: #AAA; font-size: 13px; line-height: 1.7; margin-bottom: 3px; }
+    .sentiment-note { font-size: 11px; color: #555; font-style: italic; margin-top: 6px; font-family: monospace; }
+    .source-btn {
+      margin-top: 10px; background: none; border: none;
+      font-size: 10px; font-family: monospace; cursor: pointer;
+      letter-spacing: 0.1em; padding: 0;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .source-posts { margin-top: 8px; }
+    .post-card {
+      display: block; padding: 8px 12px; margin-top: 6px;
+      background: rgba(255,255,255,0.03); border: 1px solid #1a1a22;
+      text-decoration: none; transition: background 0.15s;
+    }
+    .post-card:hover { background: rgba(255,255,255,0.06); }
+    .post-title { font-size: 12px; color: #CCC; line-height: 1.4; margin-bottom: 3px; }
+    .post-meta { font-size: 10px; color: #555; font-family: monospace; }
+    .divider { height: 1px; background: #1a1a22; margin-top: 26px; }
+
+    /* ── Themes ── */
+    .themes { margin-top: 44px; padding: 24px; background: rgba(255,255,255,0.02); border: 1px solid #1a1a22; }
+    .themes-label { font-size: 10px; font-family: monospace; letter-spacing: 0.2em; color: #555; margin-bottom: 14px; text-transform: uppercase; }
+    .themes-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .theme-tag { padding: 5px 12px; background: rgba(240,240,248,0.05); border: 1px solid #2a2a32; font-size: 12px; color: #CCC; }
+
+    /* ── All posts ── */
+    .all-posts-toggle { margin-top: 36px; text-align: center; }
+    .all-posts-list { margin-top: 16px; text-align: left; }
+    .all-post-card {
+      display: block; padding: 10px 14px; margin-bottom: 5px;
+      background: rgba(255,255,255,0.02); border: 1px solid #1a1a22;
+      text-decoration: none;
+    }
+    .all-post-card:hover { background: rgba(255,255,255,0.05); }
+    .all-post-brands { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .brand-tag { font-size: 9px; font-family: monospace; letter-spacing: 0.1em; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="eyebrow">r/NicotinePouch · Intelligence Brief</div>
+    <h1>The Pouch Report</h1>
+    <div class="meta">
+      <span class="meta-date" id="today-date"></span>
+      <span class="meta-sep">|</span>
+      <span class="brand-pill" style="color:#00C4B4">VELO</span>
+      <span class="brand-pill" style="color:#FFD700">ZYN</span>
+      <span class="brand-pill" style="color:#FF6B35">ON!</span>
+      <span class="brand-pill" style="color:#E63946">ROGUE</span>
+      <span class="brand-pill" style="color:#A8DADC">ALP</span>
+    </div>
+  </div>
+</div>
+
+<div class="body" id="app">
+
+  <!-- IDLE -->
+  <div class="idle" id="view-idle">
+    <div class="idle-icon">📰</div>
+    <p>Pulls live posts from r/NicotinePouch and uses Claude to generate<br>a brand intelligence briefing for Velo, Zyn, On!, Rogue &amp; ALP.</p>
+    <button class="btn btn-primary" onclick="generate()">Generate Today's Brief →</button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="view-loading" style="display:none">
+    <div class="spinner"></div>
+    <p class="step-text" id="step-text">Loading...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div id="view-error" style="display:none">
+    <div class="error-box">
+      <p class="error-msg" id="error-msg"></p>
+      <button class="btn btn-danger" onclick="generate()">RETRY</button>
+    </div>
+    <div id="raw-section" style="display:none">
+      <p class="raw-label">Raw response:</p>
+      <pre id="raw-text"></pre>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div id="view-done" style="display:none"></div>
+
+</div>
+
+<script>
+const BRAND_COLORS = { Velo:"#00C4B4", Zyn:"#FFD700", "On!":"#FF6B35", Rogue:"#E63946", ALP:"#A8DADC" };
+const SENTIMENT = {
+  POSITIVE: { bg:"rgba(0,196,180,0.15)",  border:"#00C4B4" },
+  MIXED:    { bg:"rgba(255,215,0,0.12)",  border:"#FFD700" },
+  NEGATIVE: { bg:"rgba(230,57,70,0.15)",  border:"#E63946" },
+};
+
+document.getElementById("today-date").textContent =
+  new Date().toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+function show(id) {
+  ["view-idle","view-loading","view-error","view-done"].forEach(v => {
+    document.getElementById(v).style.display = v === id ? "block" : "none";
+  });
+}
+
+function setStep(t) { document.getElementById("step-text").textContent = t; }
+
+async function generate() {
+  show("view-loading");
+  setStep("Fetching Reddit posts and generating brief...");
+  try {
+    const res = await fetch("/api/newsletter");
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "Unknown error");
+    render(data);
+    show("view-done");
+  } catch(e) {
+    document.getElementById("error-msg").textContent = "Error: " + e.message;
+    document.getElementById("view-error").style.display = "block";
+    show("view-error");
+  }
+}
+
+function render({ newsletter: nl, postCount, taggedPosts }) {
+  const container = document.getElementById("view-done");
+  const openState = {};
+
+  function buildHTML() {
+    let html = `
+      <div class="stats">
+        <div><div class="stat-label">POSTS SCANNED</div><div class="stat-val">${postCount}</div></div>
+        <div><div class="stat-label">BRAND MENTIONS</div><div class="stat-val">${taggedPosts.length}</div></div>
+        <div><div class="stat-label">BRANDS COVERED</div><div class="stat-val">${nl.brands.length}</div></div>
+        <div class="stats-right"><button class="btn btn-ghost" onclick="generate()">↻ Refresh</button></div>
+      </div>
+    `;
+
+    nl.brands.forEach((brand, i) => {
+      const color = BRAND_COLORS[brand.name] || "#888";
+      const sent  = SENTIMENT[brand.sentiment] || SENTIMENT.MIXED;
+      const bp    = taggedPosts.filter(p => p.brands.includes(brand.name));
+      const bullets = (brand.bullets || []).map(b => `<li>${b}</li>`).join("");
+
+      html += `
+        <div class="brand" style="border-left: 3px solid ${color}">
+          <div class="brand-header">
+            <div>
+              <div class="brand-name" style="color:${color}">${brand.name.toUpperCase()}</div>
+              <div class="brand-headline">${brand.headline || ""}</div>
+            </div>
+            <div class="sentiment-badge" style="background:${sent.bg};border:1px solid ${sent.border};color:${sent.border}">
+              ${brand.sentiment}
+            </div>
+          </div>
+          <ul class="bullets">${bullets}</ul>
+          ${brand.sentimentNote ? `<p class="sentiment-note">${brand.sentimentNote}</p>` : ""}
+          ${bp.length ? `<button class="source-btn" style="color:${color}" onclick="togglePosts('${brand.name}',this,${JSON.stringify(bp).replace(/'/g,"&#39;")})">${bp.length} source posts</button><div class="source-posts" id="posts-${brand.name}"></div>` : ""}
+        </div>
+        ${i < nl.brands.length - 1 ? '<div class="divider"></div>' : ""}
+      `;
+    });
+
+    if (nl.themes && nl.themes.length) {
+      html += `
+        <div class="themes">
+          <div class="themes-label">📊 Today's Cross-Brand Themes</div>
+          <div class="themes-list">${nl.themes.map(t => `<span class="theme-tag">${t}</span>`).join("")}</div>
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="all-posts-toggle">
+        <button class="btn btn-ghost" onclick="toggleAllPosts(this)">Show all brand posts (${taggedPosts.length})</button>
+        <div class="all-posts-list" id="all-posts-list" style="display:none">
+          ${taggedPosts.map(p => `
+            <a class="all-post-card" href="https://reddit.com${p.permalink}" target="_blank" rel="noopener">
+              <div class="post-title">${p.title}</div>
+              <div class="all-post-brands">
+                <span class="post-meta">${p.score}pts · u/${p.author}</span>
+                ${p.brands.map(b => `<span class="brand-tag" style="color:${BRAND_COLORS[b]||'#888'}">${b.toUpperCase()}</span>`).join("")}
+              </div>
+            </a>
+          `).join("")}
+        </div>
+      </div>
+    `;
+
+    return html;
+  }
+
+  container.innerHTML = buildHTML();
+}
+
+function togglePosts(brandName, btn, posts) {
+  const el = document.getElementById("posts-" + brandName);
+  if (el.style.display === "none" || !el.innerHTML) {
+    el.style.display = "block";
+    el.innerHTML = posts.slice(0, 8).map(p => `
+      <a class="post-card" href="https://reddit.com${p.permalink}" target="_blank" rel="noopener">
+        <div class="post-title">${p.title}</div>
+        <div class="post-meta">${p.score}pts · u/${p.author}</div>
+      </a>
+    `).join("");
+    btn.textContent = "hide posts";
+  } else {
+    el.style.display = "none";
+    btn.textContent = posts.length + " source posts";
+  }
+}
+
+function toggleAllPosts(btn) {
+  const el = document.getElementById("all-posts-list");
+  const hidden = el.style.display === "none";
+  el.style.display = hidden ? "block" : "none";
+  btn.textContent = hidden ? "Hide all brand posts" : `Show all brand posts`;
+}
+</script>
+</body>
+</html>
