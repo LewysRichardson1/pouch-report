@@ -1,4 +1,4 @@
-export const config = { runtime: "edge" };
+export const config = { runtime: "nodejs" };
 
 const BRANDS = ["Velo", "Zyn", "On!", "Rogue", "ALP"];
 
@@ -19,11 +19,10 @@ async function fetchReddit() {
   for (const url of urls) {
     try {
       const r = await fetch(url, {
-        headers: {
-          "Accept": "application/json",
-          "User-Agent": "PouchReport/1.0 (newsletter bot)",
-        },
-      });
+       headers: {
+  "Accept": "application/json",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+},
       if (!r.ok) continue;
       const j = await r.json();
       for (const c of (j?.data?.children || [])) all.push(c.data);
